@@ -6,7 +6,7 @@ const passportLocalMongoose = require('passport-local-mongoose')
 
 /* ====================================================  USER / GROUP SCHEMA ======================================================= */
 
-const userSchema = mongoose.Schema({ // Users can be either organizations, teams, or individuals
+const userSchema = mongoose.Schema({ // individuals
     username: {
         type: String,
         index: { unique: true },
@@ -31,7 +31,7 @@ userSchema.plugin(passportLocalMongoose)
 
 /* ================================================  TEAM SCHEMA =================================================== */
 
-const teamSchema = mongoose.Schema({
+const teamSchema = mongoose.Schema({ // recursive structure, such that teams can be nested in other teams
     _id: mongoose.Schema.Types.ObjectId,
     name: String,
     root: Boolean, // if the team is at the first level of all teams
@@ -55,7 +55,7 @@ const organizationSchema = mongoose.Schema({
     teamsContained: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team'}],
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     adminIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    permissions: [[{ type: mongoose.Schema.Types.ObjectId, ref: 'Team'}, { access: String }]], // permissions can be an id of team (giving an org read/write access to other teams, perhaps within other organizations).
+    permissions: [[{ type: mongoose.Schema.Types.ObjectId, ref: 'Team'}, { access: String }]], // permissions can be an id of team (giving an org read/write access to other teams, perhaps within other organizations). Default is no access.
     description: String,
     created_on: Date,
     img: String,
@@ -69,7 +69,7 @@ const projectSchema = mongoose.Schema({
     name: String,
     description: String,
     img: String,
-    data: String,
+    data: String, // would hold, links, nodes, and datasets used
     published: Boolean,
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     created_on: Date,
@@ -87,6 +87,7 @@ const dataSchema = mongoose.Schema({
         currentCommentNumber: String,
         commentList: [[{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }, { comment: String}, { order: Number}]]
     }
+    // later on can add projects here (such that a user can see exciting projects where this dataset was used)
 })
 
 exports.User            = mongoose.model('User', userSchema)
