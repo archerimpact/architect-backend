@@ -2,17 +2,12 @@
 
 const mongoose = require('mongoose')
 const schema = require('./schema')
-const User = schema.User
 const projects = require('./projects')
 
 const express = require('express')
 const session = require('express-session')
 const bodyParser = require('body-parser')
 const app = express()
-
-const passport = require('passport')
-const LocalStrategy = require('passport-local')
-const auth = require('./passport-connector')
 
 const credentials = require('./credentials')
 
@@ -60,26 +55,12 @@ app.listen(8000, '127.0.0.1', () => {
     console.log('Server has started')
 })
 
-
-/* User Authentication */
-passport.use(new LocalStrategy(User.authenticate()))
-passport.serializeUser(User.serializeUser())
-passport.deserializeUser(User.deserializeUser())
-app.use(passport.initialize())
-app.use(passport.session())
-
-app.post('/auth/login',    passport.authenticate('local'), auth.login)
-app.get('/auth/logout',    auth.logout)
-app.post('/auth/register', auth.register)
-app.get('/auth/verify',    auth.verify)
-
-
 /* Project Management */
 app.post('/projects/create',    projects.create)
-app.put('/projects/update',     projects.update)
+// app.put('/projects/update',     projects.update)
 app.get('/projects/get',        projects.get)
-app.get('/projects/all',        projects.list)
-app.delete('/projects/delete',  projects.delete)
+// app.get('/projects/all',        projects.list)
+// app.delete('/projects/delete',  projects.delete)
 
 
 /* General Routes */

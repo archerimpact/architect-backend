@@ -30,9 +30,6 @@ async function checkProjectAuth(req, res, field) {
     const projects = await Project
         .find({
             _id: mongoose.Types.ObjectId(field),
-            users: {
-                '$in': [req.user._id],
-            }
         })
 
     if (projects.length < 1) {
@@ -69,14 +66,11 @@ function toBool(str) {
 
 
 exports.create = async function(req, res) {
-    if (!checkUserAuth(req, res)) { return }
-
     const projId    = mongoose.Types.ObjectId()
     const projName  = validate(req.body.name) || 'Untitled'
     const projDesc  = validate(req.body.description) || ''
     const projImg   = req.body.img || ''
     const projData  = req.body.data || ''
-    const published = false
     const timestamp = Date.now()
     const project   = {
         _id: projId,
@@ -84,8 +78,6 @@ exports.create = async function(req, res) {
         description: projDesc,
         img: projImg,
         data: projData,
-        published: published,
-        users: [req.user._id],
         created_on: timestamp,
         last_modified: timestamp,
       }
@@ -93,22 +85,16 @@ exports.create = async function(req, res) {
       const saved = await (new Project(project)).save()
       if (!saved) { return error('Could not save project', res) }
 
-      return success('Project created', res)
+      return success('Project created: ' + projId, res)
 }
 
 
 exports.get = async function(req, res) {
-    if (!checkUserAuth(req, res)) { return }
-
-    const auth = await checkProjectAuth(req, res, req.query.projectid)
-    if (!auth) { return }
+    if (!checkProjectAuth(req, res, req.body.id)) { return }
 
     const projects = await Project
         .find({
-            _id: mongoose.Types.ObjectId(req.query.projectid),
-            users: {
-                '$in': [req.user._id],
-            }
+            _id: mongoose.Types.ObjectId(req.query.id),
         })
         .exec()
 
@@ -121,7 +107,7 @@ exports.get = async function(req, res) {
 exports.update = async function(req, res) {
     if (!checkUserAuth(req, res)) { return }
 
-    const auth = await checkProjectAuth(req, res, req.body.projectid)
+    const auth = await checkProjectAuth(req, res, req.body.id)
     if (!auth) { return }
 
     const updates = {}
@@ -148,7 +134,7 @@ exports.update = async function(req, res) {
     try {
         dbResponse = await Project
             .update(
-                { _id: mongoose.Types.ObjectId(req.body.projectid) },
+                { _id: mongoose.Types.ObjectId(req.body.id) },
                 { $set: updates },
                 { upsert: false }
             )
@@ -185,12 +171,12 @@ exports.list = async function(req, res) {
 exports.delete = async function(req, res) {
     if (!checkUserAuth(req, res)) { return }
 
-    const auth = await checkProjectAuth(req, res, req.query.projectid)
+    const auth = await checkProjectAuth(req, res, req.query.id)
     if (!auth) { return }
 
     const projects = await Project
         .update(
-            { _id: mongoose.Types.ObjectId(req.query.projectid) },
+            { _id: mongoose.Types.ObjectId(req.query.id) },
             { $set: { users: [] } }
         )
         .exec()
