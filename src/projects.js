@@ -90,8 +90,6 @@ exports.create = async function(req, res) {
 
 
 exports.get = async function(req, res) {
-    if (!checkProjectAuth(req, res, req.body.id)) { return }
-
     const projects = await Project
         .find({
             _id: mongoose.Types.ObjectId(req.query.id),
