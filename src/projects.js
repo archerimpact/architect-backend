@@ -87,7 +87,7 @@ exports.create = async function(req, res) {
       const saved = await (new Project(project)).save()
       if (!saved) { return error('Could not save project', res) }
 
-      return success('Project created: ' + projId, res)
+      return success(projId, res)
 }
 
 
