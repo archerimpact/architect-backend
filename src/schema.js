@@ -5,6 +5,7 @@ const mongoose = require('mongoose')
 const projectSchema = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     name: String,
+    author: String,
     description: String,
     img: String,
     data: String,

@@ -68,6 +68,7 @@ function toBool(str) {
 exports.create = async function(req, res) {
     const projId    = mongoose.Types.ObjectId()
     const projName  = validate(req.body.name) || 'Untitled'
+    const projAuthor = validate(req.body.author) || 'Anonymous'
     const projDesc  = validate(req.body.description) || ''
     const projImg   = req.body.img || ''
     const projData  = req.body.data || ''
@@ -75,6 +76,7 @@ exports.create = async function(req, res) {
     const project   = {
         _id: projId,
         name: projName,
+        author: projAuthor,
         description: projDesc,
         img: projImg,
         data: projData,
