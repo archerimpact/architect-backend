@@ -4,6 +4,9 @@ const mongoose = require('mongoose')
 const schema = require('./schema')
 const projects = require('./projects')
 
+const fs = require('fs')
+const path = require('path')
+
 const express = require('express')
 const session = require('express-session')
 const bodyParser = require('body-parser')
@@ -61,6 +64,22 @@ app.post('/projects/create',    projects.create)
 app.get('/projects/get',        projects.get)
 // app.get('/projects/all',        projects.list)
 // app.delete('/projects/delete',  projects.delete)
+
+app.get('/submit/email', async function(req, res) {
+    const email = req.query.email
+    if (!email) {
+        return res.status(400).end()
+    }
+
+    await fs.appendFile(path.join(__dirname, 'submissions', 'email.txt'), JSON.stringify(email) + ',\n', err => {
+        if (err) {
+            console.log('Could not write to email file: ' + err)
+            return res.status(400).end()
+        }
+    })
+    console.log('New email submission! ' + email)
+    return res.status(200).end()
+});
 
 
 /* General Routes */
