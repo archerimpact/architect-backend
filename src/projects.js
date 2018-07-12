@@ -67,20 +67,27 @@ function toBool(str) {
 
 exports.create = async function(req, res) {
     const projId    = mongoose.Types.ObjectId()
+    const projName  = validate(req.body.name) || 'Untitled'
+    const projAuthor = validate(req.body.author) || 'Anonymous'
+    const projDesc  = validate(req.body.description) || ''
+    const projImg   = req.body.img || ''
     const projData  = req.body.data || ''
     const timestamp = Date.now()
     const project   = {
         _id: projId,
+        name: projName,
+        author: projAuthor,
+        description: projDesc,
+        img: projImg,
         data: projData,
         created_on: timestamp,
         last_modified: timestamp,
-    }
+      }
 
-    const saved = await (new Project(project)).save()
-    if (!saved) { return error('Could not save project', res) }
-    console.log('Saved project: ' + projId)
+      const saved = await (new Project(project)).save()
+      if (!saved) { return error('Could not save project', res) }
 
-    return success(projId, res)
+      return success(projId, res)
 }
 
 
