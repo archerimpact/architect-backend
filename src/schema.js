@@ -4,32 +4,90 @@ const mongoose = require('mongoose')
 const passport = require('passport')
 const passportLocalMongoose = require('passport-local-mongoose')
 
-const userSchema = mongoose.Schema({
-    // _id: mongoose.Schema.Types.ObjectId, // TODO: this line prevented new accounts being created BUT PROJECTS SAVING BELOW MAY BREAK?? Maybe _id
+/* ====================================================  USER / GROUP SCHEMA ======================================================= */
+
+const userSchema = mongoose.Schema({ // individuals
     username: {
         type: String,
         index: { unique: true },
         required: true,
         lowercase: true
     },
-    password: String,
-    // email: String,
-})
+    password: {
+        type: String,
+        required: true
+    },
+    name: String,
+    email: String,
+    version: Number, // 1 = Community, 2 = Enterprise
+    permissions: [[{ type: mongoose.Schema.Types.ObjectId, ref: 'Team'}, { access: String }]], // permissions can be an id of team (giving a user read/write access. Must specify for each user, it doesn't assume automatic read access for users in an organization).
+    organizationsPartOf: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Organization' }],
+    trill: Boolean
+});
+
 userSchema.plugin(passportLocalMongoose)
 
+/* ================================================  TEAM SCHEMA =================================================== */
+
+const teamSchema = mongoose.Schema({ // recursive structure, such that teams can be nested in other teams
+    _id: mongoose.Schema.Types.ObjectId,
+    name: String,
+    root: Boolean, // if the team is at the first level of all teams
+    version: Number, // 1 = Community, 2 = Enterprise
+    usersContained: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
+    teamsContained: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team'}],
+    organizationsPartOf: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Organization'}], // only if enterprise, otherwise null
+    adminIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    created_on: Date,
+    img: String,
+    description: String
+});
+
+/* ================================================  ORGANIZATION SCHEMA =================================================== */
+
+const organizationSchema = mongoose.Schema({
+    name: String,
+    teamsContained: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team'}],
+    usersContained: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    adminIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    permissions: [[{ type: mongoose.Schema.Types.ObjectId, ref: 'Team'}, { access: String }]], // permissions can be an id of team (giving an org read/write access to other teams, perhaps within other organizations). Default is no access.
+    description: String,
+    created_on: Date,
+    img: String,
+    description: String
+});
+
+/* ================================================  PROJECT / SPACE SCHEMA =================================================== */
 
 const projectSchema = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     name: String,
     description: String,
     img: String,
-    data: String,
+    data: String, // would hold, links, nodes, and datasets used
     published: Boolean,
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    teams: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
     created_on: Date,
     last_modified: Date,
 })
 
+/* ======================================================  DATA SCHEMA ========================================================== */
 
-exports.User    = mongoose.model('User', userSchema)
-exports.Project = mongoose.model('Project', projectSchema)
+const dataSchema = mongoose.Schema({
+    _id: mongoose.Schema.Types.ObjectId,
+    type: String,
+    entityId: String,
+    favorited: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    comments: {
+        currentCommentNumber: String,
+        commentList: [[{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }, { comment: String}, { order: Number}]]
+    },
+    projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' }, // -1 for data layer (if it's not in a project)
+})
+
+exports.User            = mongoose.model('User', userSchema)
+exports.Project         = mongoose.model('Project', projectSchema)
+exports.Data            = mongoose.model('Data', dataSchema)
+exports.Team            = mongoose.model('Team', teamSchema)
+exports.Organization    = mongoose.model('Organization', organizationSchema)
