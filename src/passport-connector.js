@@ -39,7 +39,7 @@ exports.register = async function register(req, res) {
     if (!username || !usernameIsValid(username)) { return error('Invalid username', res) }
     if (!password) { return error('Invalid password', res) }
 
-    const newUser      = new User({ username: username })
+    const newUser      = new User({ username: username, password: password })
     const registration = await User.register(newUser, password)
 
     if (!registration) { return error('Registration failed; please try again', res) }
